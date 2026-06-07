@@ -1,19 +1,24 @@
 # Sa.AI for Outlook
 
-An AI-powered Chrome extension that adds a smart sidebar to Outlook Web, letting you chat with an AI assistant about your inbox, summarize email threads, and manage your email workflow — all without leaving Outlook.
+Most inboxes show you emails. Yours shows you problems — the missed task, the forgotten thread, the reply you never got to.
 
-This is the Outlook counterpart to the [Sa.AI Gmail Assistant](https://github.com/nbadadali/gmail_chrome_extension-files), built with the same architecture adapted for Microsoft's platform.
+Sa.AI is a Chrome extension that lives inside Outlook Web as a sidebar. It summarizes your inbox, extracts tasks, drafts replies, and answers questions about your emails — so you always know what matters and what needs your attention.
+
+This is the Outlook counterpart to the [Sa.AI Gmail Assistant](https://github.com/nbadadali/gmail_chrome_extension-files), built with the same purpose and architecture adapted for Microsoft's platform.
 
 ## Features
 
-- **Outlook Sidebar**: Sidebar injected directly into Outlook Web across all domains (office.com, live.com, outlook.com)
-- **Microsoft OAuth with PKCE**: Secure sign-in using Proof Key for Code Exchange — a more secure OAuth flow that protects against authorization code interception
-- **AI Chat Interface**: Ask questions about your inbox, emails, and tasks
-- **Thread Summarization**: Open any email thread and ask the AI to summarize it — the extension reads the thread ID from the URL automatically
+- **Inbox Summary**: Opens with a clear summary of what actually matters in your inbox — no more scanning through everything manually
+- **Task Extraction**: Pulls tasks buried inside email threads and turns them into a prioritized to-do list, kept up to date automatically
+- **AI Chat**: Ask anything about your inbox, the web, or your day and get instant, context-aware answers
+- **Voice Mode**: Switch to voice instead of typing — talk to your assistant naturally
+- **Thread Summarization**: Get the key points of any long email thread in seconds, without scrolling through it
+- **Draft Replies**: Ask the assistant to draft a reply and get a first version ready to send
+- **Auto-Labeling**: Quietly labels and organizes incoming emails in the background — your inbox stays tidy without you touching a thing
+- **Microsoft OAuth with PKCE**: Secure sign-in using Proof Key for Code Exchange — protects against authorization code interception
 - **Automatic Token Refresh**: Silently refreshes your session on expiry without requiring you to sign in again
-- **Extension Reload Recovery**: Detects when the extension has been reloaded and prompts a clean page refresh rather than silently failing
-- **Session Persistence**: Stays connected across browser sessions
-- **SPA Compatibility**: Works with Outlook's single-page navigation
+- **Session Persistence**: Stays connected across browser sessions — sign in once and you're set
+- **SPA Compatibility**: Works with Outlook's single-page navigation across all domains (office.com, live.com, outlook.com)
 
 ## Tech Stack
 
@@ -42,15 +47,19 @@ This is the Outlook counterpart to the [Sa.AI Gmail Assistant](https://github.co
 
 ### Using the Assistant
 1. Open Outlook Web at [outlook.office.com](https://outlook.office.com) or [outlook.live.com](https://outlook.live.com)
-2. The Sa.AI sidebar will appear
-3. Type a message and press **Enter** or click **Send**
-4. Try asking:
+2. The Sa.AI sidebar appears on the right side of the page
+3. Your inbox summary loads automatically — tasks, priorities, and key threads
+4. Type a message or switch to **voice mode** to ask questions
+5. Try asking:
    - *"Summarize my inbox"*
-   - *"What emails need my attention?"*
+   - *"What tasks do I have today?"*
+   - *"Draft a reply to [sender]"*
    - *"Summarize this thread"* (when an email thread is open)
 
 ### Sidebar Controls
 - **× button**: Closes the sidebar
+- **Chat input**: Auto-focuses when the sidebar opens, ready to type immediately
+- **Voice mode**: Switch from typing to speaking with your assistant
 - **Connect button**: Appears when not signed in — starts the Microsoft OAuth flow
 
 ## How It Works
@@ -58,8 +67,10 @@ This is the Outlook counterpart to the [Sa.AI Gmail Assistant](https://github.co
 The extension is built around three components that communicate via Chrome's messaging API:
 
 1. **Popup** (`popup.js`): Handles Microsoft OAuth sign-in and shows your connection status
-2. **Background script** (`background.js`): Manages the PKCE OAuth flow, stores and refreshes JWTs, and forwards chat messages to n8n
-3. **Content script** (`content-outlook.js`): Injects the sidebar into Outlook Web, manages the chat UI, and extracts thread IDs from the URL for thread summarization
+2. **Background script** (`background.js`): Manages the PKCE OAuth flow, stores and refreshes JWTs, and forwards requests to n8n
+3. **Content script** (`content-outlook.js`): Injects the sidebar into Outlook Web, manages the full chat and task UI, and extracts thread IDs from the URL for thread summarization
+
+When you open Outlook, the content script injects the sidebar and loads your inbox summary via n8n. When you send a message or request a task list, the background script makes an authenticated request to the n8n webhook, which processes it using AI and returns the response to your sidebar.
 
 ### Authentication Flow
 
@@ -110,6 +121,7 @@ See `OAUTH_SETUP.md` for the full step-by-step configuration guide.
 ## Security
 
 - JWT tokens are stored in `chrome.storage.local`, sandboxed to the extension
+- No email content or credentials are stored locally
 - PKCE prevents authorization code interception attacks
 - An OAuth concurrency lock prevents duplicate sign-in flows from running at the same time
 - Thread IDs are validated for format and length before being sent to the backend
